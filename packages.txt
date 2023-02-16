@@ -1,0 +1,4 @@
+default-jre-headless
+libreoffice-core-nogui
+libreoffice-writer-nogui
+libreoffice-java-common

@@ -140,8 +140,8 @@ def get_versions() -> str:
     result = run(["soffice", "--version"], capture_output=True, text=True)
     libreoffice_version = result.stdout.strip()
     versions = f'''
-    - Streamlit:&nbsp;&nbsp;&nbsp;&nbsp;`{st.__version__}`
-    - LibreOffice:&nbsp;&nbsp;&nbsp;&nbsp;`{libreoffice_version}`
+    - `Streamlit {st.__version__}`
+    - `{libreoffice_version}`
     '''
     return versions
 

@@ -9,7 +9,7 @@ Supported file formats should be: `docx`, `doc`, `odt`, `rtf` (not tested intens
 As we all know, there are some compatibility issues between LibreOffice and Microsoft Office. Therefore, the conversion might not be perfect and may fail in some cases.
 Especially if you convert a Microsoft Word document to PDF.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://streamlit.io/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://franky1-streamlit-docx-converter-streamlit-app-n67qvo.streamlit.app/)
 
 ## Status
 

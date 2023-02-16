@@ -1,23 +1,35 @@
-# Streamlit Template Project
+<!-- markdownlint-disable MD033 -->
+# Streamlit Docx Converter
 
-Streamlit template project for new streamlit projects.
+Streamlit App to convert **Microsoft Word** or **LibreOffice Writer** documents to PDF.
+
+Supported file formats should be: `docx`, `doc`, `odt`, `rtf` (not tested intensively)
+
+*Disclaimer*: The conversion is done using a headless version of **LibreOffice**.
+As we all know, there are some compatibility issues between LibreOffice and Microsoft Office. Therefore, the conversion might not be perfect and may fail in some cases.
+Especially if you convert a Microsoft Word document to PDF.
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://streamlit.io/)
 
 ## Status
 
-> Work in progress - Do not use yet - Last changed: 2023-02-16
+> Work in progress - Last changed: 2023-02-16
 
-## Decription
+## Description
 
 Trying to evaluate the best way to convert docx to pdf in a headless environment. The goal is to use this in a docker container. It seems that **libreoffice** is currently the best option, but it is not easy to install in a docker container.
 
 ## ToDo
 
-- [ ] Make a streamlit demo app that can convert docx to pdf
-- [ ] Add session based temporary file storage
+- [x] Make a streamlit demo app that can convert docx to pdf
+- [x] Add session based temporary file storage
+- [x] Make a wider page layout
 - [ ] Allow to upload multiple files
-- [ ] Allow to download multiple files
+- [ ] Accumulate multiple files in a temporary folder
+- [ ] Allow to download multiple files as zip
+- [ ] Cleanup temporary files after a certain time
+- [ ] Add button for manual cleanup of temporary files
+- [ ] Add some app styling with css
 - [ ] Test it on streamlit cloud
 
 ## Resources
@@ -41,27 +53,27 @@ Trying to evaluate the best way to convert docx to pdf in a headless environment
 
 ### LibreOffice
 
-Since libreoffice is the only library that works, it is the only one that is tested.
+Since libreoffice is the only library that works in a headless linux docker container based environment, it is the only option that is tested.<br>
+Below commands are working in the shell of the docker container:
 
-Below commands are working in the shell of the docker container.
-
-```shell
+```bash
 soffice --headless --convert-to pdf sample.docx
 soffice --headless --convert-to pdf:writer_pdf_Export sample.docx
+soffice --headless --convert-to pdf:writer_pdf_Export --outdir . sample.docx
 ```
 
-> below untested yet, but should work
+Or using python subprocess call:
 
 ```python
 import subprocess
 def generate_pdf(doc_path, path):
     subprocess.call(['soffice',
-                 '--headless',
-                 '--convert-to',
-                 'pdf',
-                 '--outdir',
-                 path,
-                 doc_path])
+        '--headless',
+        '--convert-to',
+        'pdf',
+        '--outdir',
+        path,
+        doc_path])
     return doc_path
 generate_pdf("docx_path.docx", "output_path")
 ```

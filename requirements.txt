@@ -1,2 +1,2 @@
+numpy
 streamlit
-msoffice2pdf

@@ -1,5 +1,12 @@
 /* custom styling of streamlit components */
-/* just an example here */
+
+div.block-container.css-k1ih3n.egzxvld4 {
+    padding-top: 2rem;
+}
+
+div.css-1vq4p4l.e1fqkh3o4 {
+    padding-top: 4rem;
+}
 
 hr {
     margin-top: 1em;

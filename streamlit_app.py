@@ -16,9 +16,9 @@ st.set_page_config(page_title="Office to PDF Converter",
                     layout='wide',
                     initial_sidebar_state='expanded')
 
-# TODO: apply custom css if needed
-# with open('utils/style.css') as css:
-#     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+# apply custom css if needed
+with open(Path('utils/style.css')) as css:
+    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
 
 # TODO: this is untested yet
@@ -135,7 +135,17 @@ def show_pdf_base64(base64_pdf):
     st.markdown(pdf_display, unsafe_allow_html=True)
 
 
-# @st.cache_resource(show_spinner=False)
+@st.cache_data(show_spinner=False)
+def get_versions() -> str:
+    result = run(["soffice", "--version"], capture_output=True, text=True)
+    libreoffice_version = result.stdout.strip()
+    versions = f'''
+    - Streamlit:&nbsp;&nbsp;&nbsp;&nbsp;`{st.__version__}`
+    - LibreOffice:&nbsp;&nbsp;&nbsp;&nbsp;`{libreoffice_version}`
+    '''
+    return versions
+
+
 def show_sidebar():
     with st.sidebar:
         st.header('About')
@@ -149,6 +159,9 @@ def show_sidebar():
             Therefore, the conversion might not be perfect and may fail in some cases.
             Especially if you convert a Microsoft Office document and/or the document is more complex.''')
         st.markdown('''---''')
+        st.subheader('Versions')
+        st.markdown(get_versions(), unsafe_allow_html=True)
+        st.markdown('''---''')
         st.subheader('GitHub')
         st.markdown('''<https://github.com/Franky1/Streamlit-docx-converter>''')
 
@@ -157,38 +170,47 @@ if __name__ == "__main__":
     tmpdirname = make_tempdir()  # make temp dir for each user session
     show_sidebar()
     st.title('Office to PDF Converter 📄')
-    # st.markdown('''This app can convert **Microsoft Word** or **LibreOffice Writer** Documents to PDF.''')
-    # st.markdown('''Supported input file formats are: `docx`, `doc`, `odt`, `rtf`.''')
-    # st.markdown('''**Disclaimer**: The conversion is done using a headless version of **LibreOffice**.
-    #     As we all know, there are some compatibility issues between LibreOffice and Microsoft Office.
-    #     Therefore, the conversion might not be perfect and may fail in some cases.
-    #     Especially if you convert a Microsoft Office document to PDF.''')
-    # st.markdown('''---''')
-    uploaded_file = st.file_uploader("Upload a Microsoft Word or LibreOffice Writer file",
+    st.markdown('''---''')
+    # add streamlit 2 column layout
+    col1, col2, col3 = st.columns([2,2,1], gap='large')
+    pdf_file = None
+    pdf_bytes = None
+    with col1:
+        st.subheader('Upload a Microsoft Word or LibreOffice Writer file')
+        uploaded_file = st.file_uploader(label='Upload a Microsoft Word or LibreOffice Writer file',
                                     type=['doc', 'docx', 'odt', 'rtf'])
-    if uploaded_file is not None:
-        # store file in temp dir
-        tmpfile = store_file_in_tempdir(tmpdirname, uploaded_file)
-        # convert file to pdf
-        with st.spinner('Converting file...'):
-            pdf_file, exception = convert_doc_to_pdf_native(doc_file=tmpfile, output_dir=tmpdirname)
-        if pdf_file is None:
-            st.error('Conversion failed.')
+        if uploaded_file is not None:
+            # store file in temp dir
+            tmpfile = store_file_in_tempdir(tmpdirname, uploaded_file)
+            # convert file to pdf
+            with st.spinner('Converting file...'):
+                pdf_file, exception = convert_doc_to_pdf_native(doc_file=tmpfile, output_dir=tmpdirname)
+            if pdf_file is None:
+                st.error('Conversion failed.')
+                st.stop()
+            elif exception is not None:
+                st.error('Exception occured during conversion.')
+                st.error(exception)
+                st.stop()
+    with col2:
+        st.subheader('Download converted PDF file')
+        if pdf_file is not None:
+            # show result
+            st.info(f"Converted file: {pdf_file.name}")
+            pdf_bytes = get_pdf_bytes(pdf_file)
+            st.download_button(label="Download PDF",
+                data=pdf_bytes,
+                file_name=pdf_file.name,
+                mime='application/octet-stream')
+        else:
             st.stop()
-        elif exception is not None:
-            st.error('Exception occured during conversion.')
-            st.error(exception)
-            st.stop()
-        # show result
-        st.info(f"Converted file: {pdf_file.name}")
-        pdf_bytes = get_pdf_bytes(pdf_file)
+    with col3:
+        if pdf_file is not None:
+            st.image('pdf.png', width=150)
+
+    if pdf_bytes is not None:
+        st.markdown('''---''')
+        st.subheader('Preview of converted PDF file')
         pdf_bytes_base64 = get_base64_encoded_bytes(pdf_bytes)
         # show pdf in iframe already base64 encoded
         show_pdf_base64(pdf_bytes_base64)
-        st.download_button(label="Download PDF",
-            data=pdf_bytes,
-            file_name=pdf_file.name,
-            # mime='application/octet-stream')
-            mime='application/pdf')
-    else:
-        st.stop()

@@ -24,12 +24,12 @@ Trying to evaluate the best way to convert docx to pdf in a headless environment
 - [x] Make a streamlit demo app that can convert docx to pdf
 - [x] Add session based temporary file storage
 - [x] Make a wider page layout
+- [x] Add some app styling with css
 - [ ] Allow to upload multiple files
 - [ ] Accumulate multiple files in a temporary folder
 - [ ] Allow to download multiple files as zip
 - [ ] Cleanup temporary files after a certain time
 - [ ] Add button for manual cleanup of temporary files
-- [ ] Add some app styling with css
 - [ ] Test it on streamlit cloud
 
 ## Resources

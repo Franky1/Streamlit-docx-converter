@@ -7,17 +7,21 @@ Supported file formats should be: `docx`, `doc`, `odt`, `rtf` (not tested intens
 
 *Disclaimer*: The conversion is done using a headless version of **LibreOffice**.
 As we all know, there are some compatibility issues between LibreOffice and Microsoft Office. Therefore, the conversion might not be perfect and may fail in some cases.
-Especially if you convert a Microsoft Word document to PDF.
+Especially if you convert a Microsoft Word document and/or the document is more complex.
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://franky1-streamlit-docx-converter-streamlit-app-n67qvo.streamlit.app/)
 
 ## Status
 
-> Work in progress - Last changed: 2023-02-16
+> Demo application is working - Last changed: 2023-02-17
 
 ## Description
 
 Trying to evaluate the best way to convert docx to pdf in a headless environment. The goal is to use this in a docker container. It seems that **libreoffice** is currently the best option, but it is not easy to install in a docker container.
+
+## Issues
+
+- [ ] Currently there is an issue after deleting temporary files.
 
 ## ToDo
 
@@ -25,12 +29,13 @@ Trying to evaluate the best way to convert docx to pdf in a headless environment
 - [x] Add session based temporary file storage
 - [x] Make a wider page layout
 - [x] Add some app styling with css
-- [ ] Allow to upload multiple files
-- [ ] Accumulate multiple files in a temporary folder
-- [ ] Allow to download multiple files as zip
+- [x] Test it on streamlit cloud
+- [x] Accumulate multiple files in a temporary folder
+- [x] Allow to download multiple files as zip
+- [x] Add button for manual cleanup of temporary files
 - [ ] Cleanup temporary files after a certain time
-- [ ] Add button for manual cleanup of temporary files
-- [ ] Test it on streamlit cloud
+- [ ] Allow to upload multiple files at once
+- [ ] Cleanup unused functions
 
 ## Resources
 

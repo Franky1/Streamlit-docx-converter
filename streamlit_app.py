@@ -2,14 +2,15 @@ import base64
 import re
 import shutil
 import tempfile
+import time
 import uuid
 from datetime import datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 from subprocess import PIPE, run
+from zipfile import ZipFile
 
 import streamlit as st
-
 
 st.set_page_config(page_title="Office to PDF Converter",
                     page_icon='📄',
@@ -44,7 +45,7 @@ def cleanup_tempdir() -> None:
 
 
 # TODO: this is untested yet
-@st.cache_data(show_spinner=False)
+# @st.cache_data(show_spinner=False)
 def cleanup_session_tempdir() -> None:
     '''Cleanup temp dir for user session.
     Deletes the temp dir if it exists.
@@ -53,6 +54,15 @@ def cleanup_session_tempdir() -> None:
         tempfiledir = st.session_state['tempfiledir']
         if tempfiledir.exists():
             shutil.rmtree(tempfiledir)
+
+
+def get_all_subdirs_in_tempdir() -> list:
+    '''Get all subdirs in temp dir
+    returns: list of subdirs
+    '''
+    tempfiledir = Path(tempfile.gettempdir())
+    subdirs = [x for x in tempfiledir.iterdir() if x.is_dir()]
+    return subdirs
 
 
 @st.cache_data(show_spinner=False)
@@ -82,7 +92,7 @@ def store_file_in_tempdir(tmpdirname: Path, uploaded_file: BytesIO) -> Path:
     return tmpfile
 
 
-@st.cache_data(show_spinner=False)
+# @st.cache_data(show_spinner=False)
 def convert_doc_to_pdf_native(doc_file: Path, output_dir: Path=Path("."), timeout: int=60):
     """Converts a doc file to pdf using libreoffice without msoffice2pdf.
     Calls libroeoffice (soffice) directly in headless mode.
@@ -146,6 +156,91 @@ def get_versions() -> str:
     return versions
 
 
+# @st.cache_data(show_spinner=False)
+def get_all_files_in_tempdir(tempfiledir: Path) -> list:
+    files = [x for x in tempfiledir.iterdir() if x.is_file()]
+    files = sorted(files, key=lambda f: f.stat().st_mtime)
+    return files
+
+
+# @st.cache_data(show_spinner=False)
+def get_pdf_files_in_tempdir(tempfiledir: Path) -> list:
+    files = [x for x in tempfiledir.iterdir() if x.is_file() and x.suffix == '.pdf']
+    files = sorted(files, key=lambda f: f.stat().st_mtime)
+    return files
+
+
+# @st.cache_data(show_spinner=False)
+def get_zip_files_in_tempdir(tempfiledir: Path) -> list:
+    files = [x for x in tempfiledir.iterdir() if x.is_file() and x.suffix == '.zip']
+    files = sorted(files, key=lambda f: f.stat().st_mtime)
+    return files
+
+
+@st.cache_data(show_spinner=False)
+def make_zipfile_from_filelist(filelist: list, output_dir: Path=Path("."), zipname: str="Converted.zip") -> Path:
+    """Make zipfile from list of files
+    params: filelist: list of files
+            output_dir: Path to output dir
+            zipname: name of zipfile
+    returns: Path to zipfile
+    """
+    zip_path = output_dir.joinpath(zipname)
+    with ZipFile(zip_path, 'w') as zipObj:
+        for file in filelist:
+            zipObj.write(file, file.name)
+    return zip_path
+
+
+# @st.cache_data(show_spinner=False)
+def delete_all_pdf_files_in_tempdir(tempfiledir: Path):
+    for file in get_pdf_files_in_tempdir(tempfiledir):
+        file.unlink()
+
+
+# @st.cache_data(show_spinner=False)
+def delete_all_zip_files_in_tempdir(tempfiledir: Path):
+    for file in get_zip_files_in_tempdir(tempfiledir):
+        file.unlink()
+
+
+# @st.cache_data(show_spinner=False)
+def delete_all_files_in_tempdir(tempfiledir: Path):
+    for file in get_all_files_in_tempdir(tempfiledir):
+        print(f"Deleting {file}")
+        file.unlink()
+
+
+# @st.cache_data(show_spinner=False)
+def delete_files_from_tempdir_with_same_stem(tempfiledir: Path, file_path: Path):
+    file_stem = file_path.stem
+    for file in get_all_files_in_tempdir(tempfiledir):
+        if file.stem == file_stem:
+            file.unlink()
+
+
+# @st.cache_data(show_spinner=False)
+def get_bytes_from_file(file_path: Path) -> bytes:
+    with open(file_path, "rb") as f:
+        file_bytes = f.read()
+    return file_bytes
+
+
+# @st.cache_data(show_spinner=False)
+def check_if_file_with_same_name_and_hash_exists(tempfiledir: Path, file_name: str, hashval: int) -> bool:
+    """Check if file with same name and hash already exists in tempdir
+    params: file_path: Path to file
+            hash: hash of file
+    returns: True if file with same name and hash already exists in tempdir
+    """
+    file_path = tempfiledir.joinpath(file_name)
+    if file_path.exists():
+        file_hash = hash((file_path.name, file_path.stat().st_size))
+        if file_hash == hashval:
+            return True
+    return False
+
+
 def show_sidebar():
     with st.sidebar:
         st.header('About')
@@ -172,45 +267,91 @@ if __name__ == "__main__":
     st.title('Office to PDF Converter 📄')
     st.markdown('''---''')
     # add streamlit 2 column layout
-    col1, col2, col3 = st.columns([2,2,1], gap='large')
+    col1, col2 = st.columns([6,8], gap='large')
     pdf_file = None
     pdf_bytes = None
     with col1:
-        st.subheader('Upload a Microsoft Word or LibreOffice Writer file')
+        st.subheader('Upload MS Office or LibreOffice file')
+        # with st.form("convert", clear_on_submit=True):
         uploaded_file = st.file_uploader(label='Upload a Microsoft Word or LibreOffice Writer file',
-                                    type=['doc', 'docx', 'odt', 'rtf'])
+                        type=['doc', 'docx', 'odt', 'rtf'],
+                        key='file_uploader')
+            # submitted = st.form_submit_button("Convert uploaded file to PDF")
+        # FIXME: something is broken here, maybe the Path.unlink() method does not work as expected
+        print('---------------------------------')
+        print(st.session_state.get('file_uploader'))
+        for g in get_all_files_in_tempdir(tmpdirname):
+            print(g)
         if uploaded_file is not None:
-            # store file in temp dir
-            tmpfile = store_file_in_tempdir(tmpdirname, uploaded_file)
-            # convert file to pdf
-            with st.spinner('Converting file...'):
-                pdf_file, exception = convert_doc_to_pdf_native(doc_file=tmpfile, output_dir=tmpdirname)
-            if pdf_file is None:
-                st.error('Conversion failed.')
-                st.stop()
-            elif exception is not None:
-                st.error('Exception occured during conversion.')
-                st.error(exception)
-                st.stop()
+            uploaded_file_hash = hash((uploaded_file.name, uploaded_file.size))
+            if check_if_file_with_same_name_and_hash_exists(tempfiledir=tmpdirname, file_name=uploaded_file.name, hashval=uploaded_file_hash) is False:
+                # store file in temp dir
+                tmpfile = store_file_in_tempdir(tmpdirname, uploaded_file)
+                print(f"Uploaded file: {tmpfile}")
+                # convert file to pdf
+                with st.spinner('Converting file...'):
+                    pdf_file, exception = convert_doc_to_pdf_native(doc_file=tmpfile, output_dir=tmpdirname)
+                if pdf_file is None:
+                    st.error('Conversion failed.')
+                    st.stop()
+                if exception is not None:
+                    st.error('Exception occured during conversion.')
+                    st.exception(exception)
+                    st.stop()
+                if pdf_file is not None:
+                    if pdf_file.exists():
+                        st.success('Conversion successful.')
+                        st.info(f"Converted file: {pdf_file.name}")
+                        pdf_bytes = get_bytes_from_file(pdf_file)
+
     with col2:
-        st.subheader('Download converted PDF file')
-        if pdf_file is not None:
-            # show result
-            st.info(f"Converted file: {pdf_file.name}")
-            pdf_bytes = get_pdf_bytes(pdf_file)
-            st.download_button(label="Download PDF",
-                data=pdf_bytes,
-                file_name=pdf_file.name,
-                mime='application/octet-stream')
+        st.subheader('Download or delete converted PDF file(s)')
+        pdf_files_in_temp = get_pdf_files_in_tempdir(tmpdirname)
+        # st.write(pdf_files_in_temp)
+        # make subcolums for download or deleting single pdf files
+        if len(pdf_files_in_temp) > 0:
+            file_bytes = list()
+            for index, file in enumerate(pdf_files_in_temp):
+                file_bytes.append(get_bytes_from_file(file))
+                subcol1, subcol2, subcol3, subcol4 = st.columns([12,3,3,3])
+                with subcol1:
+                    st.info(file.name)
+                with subcol2:
+                    if st.button('Preview', key=f'preview_button_{index}'):
+                        pdf_file = file
+                        pdf_bytes = file_bytes[index]
+                with subcol3:
+                    st.download_button(label='Download',
+                                data=file_bytes[index],
+                                file_name=file.name,
+                                mime='application/octet-stream',
+                                key=f'download_button_{index}')
+                with subcol4:
+                    if st.button('Delete', key=f'delete_button_{index}'):
+                        print(file)
+                        delete_files_from_tempdir_with_same_stem(tmpdirname, file)
+                        # FIXME: probably something is broken here
+                        time.sleep(0.5)
+                        st.experimental_rerun()
+            # download button for all pdf files as zip
+            st.markdown('''<br>''', unsafe_allow_html=True)
+            zip_path = make_zipfile_from_filelist(pdf_files_in_temp, tmpdirname)
+            zip_bytes = get_bytes_from_file(zip_path)
+            st.download_button(label='Download all PDF files as single ZIP file',
+                        data=zip_bytes,
+                        file_name=zip_path.name,
+                        mime='application/octet-stream')
         else:
-            st.stop()
-    with col3:
-        if pdf_file is not None:
-            st.image('pdf.png', width=150)
+            st.warning('No PDF files available for download.')
+        if st.button('Delete all files from Temporary folder', key='delete_all_button'):
+            delete_all_files_in_tempdir(tmpdirname)
+            # FIXME: probably something is broken here
+            time.sleep(0.5)
+            st.experimental_rerun()
 
     if pdf_bytes is not None:
         st.markdown('''---''')
-        st.subheader('Preview of converted PDF file')
+        st.subheader(f'Preview of converted PDF file "{pdf_file.name}"')
         pdf_bytes_base64 = get_base64_encoded_bytes(pdf_bytes)
         # show pdf in iframe already base64 encoded
         show_pdf_base64(pdf_bytes_base64)

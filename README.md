@@ -1,19 +1,19 @@
 <!-- markdownlint-disable MD033 -->
 # Streamlit Docx Converter
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://franky1-streamlit-docx-converter-streamlit-app-n67qvo.streamlit.app/)
+
 Streamlit App to convert **Microsoft Word** or **LibreOffice Writer** documents to PDF.
 
-Supported file formats should be: `docx`, `doc`, `odt`, `rtf` (not tested intensively)
+Supported file formats are: `docx`, `doc`, `odt`, `rtf`
 
 *Disclaimer*: The conversion is done using a headless version of **LibreOffice**.
 As we all know, there are some compatibility issues between LibreOffice and Microsoft Office. Therefore, the conversion might not be perfect and may fail in some cases.
 Especially if you convert a Microsoft Word document and/or the document is more complex.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://franky1-streamlit-docx-converter-streamlit-app-n67qvo.streamlit.app/)
-
 ## Status
 
-> Demo application is working - Last changed: 2023-02-17
+> Demo application is working - Last changed: 2023-02-20
 
 ## Description
 
@@ -21,7 +21,7 @@ Trying to evaluate the best way to convert docx to pdf in a headless environment
 
 ## Issues
 
-- [ ] Currently there is an issue after deleting temporary files.
+None.
 
 ## ToDo
 
@@ -33,9 +33,10 @@ Trying to evaluate the best way to convert docx to pdf in a headless environment
 - [x] Accumulate multiple files in a temporary folder
 - [x] Allow to download multiple files as zip
 - [x] Add button for manual cleanup of temporary files
-- [ ] Cleanup temporary files after a certain time
-- [ ] Allow to upload multiple files at once
-- [ ] Cleanup unused functions
+- [x] Allow to upload multiple files at once
+- [x] Cleanup temporary files after a certain time
+- [x] Cleanup unused functions
+- [ ] Use hash of file content to further improve caching and speed of application
 
 ## Resources
 

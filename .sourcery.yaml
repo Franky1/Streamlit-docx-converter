@@ -7,3 +7,4 @@ refactor:
     - list-literal
     - dict-literal
     - use-named-expression
+    - extract-duplicate-method

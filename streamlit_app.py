@@ -205,8 +205,9 @@ def get_bytes_from_file(file_path: Path) -> bytes:
 
 def check_if_file_with_same_name_and_hash_exists(tempfiledir: Path, file_name: str, hashval: int) -> bool:
     """Check if file with same name and hash already exists in tempdir
-    params: file_path: Path to file
-            hash: hash of file
+    params: tempfiledir: Path to file
+            file_name: name of file
+            hashval: hash of file
     returns: True if file with same name and hash already exists in tempdir
     """
     file_path = tempfiledir.joinpath(file_name)
